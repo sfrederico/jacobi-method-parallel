@@ -85,6 +85,7 @@ double calcula_elemento(double **A, double *x, int lin, double b, int n){
             soma += (A[lin][i]) * x[i];
         }
     }
+    // printf("resultado: %f\n", (b-soma)/(A[lin][lin]));
     return (b-soma)/(A[lin][lin]);
 }
 /*--------------------------------*/
@@ -140,6 +141,8 @@ RETORNO* jacobi(double **A, double *b, int n, int np, int *iter, double *shm_id)
             break;
         }
         contador++;
+		// printf("### contador: %d ###\n", contador);
+
     }
     retorno->resultado = novo_x;
     return retorno;

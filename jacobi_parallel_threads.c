@@ -88,34 +88,27 @@ double calcula_elemento(double **A, double *x, int lin, double b, int tamanho_ma
             soma += (A[lin][i]) * x[i];
         }
     }
+    // printf("resultado: %f\n", (b-soma)/(A[lin][lin]));
     return (b-soma)/(A[lin][lin]);
 }
 /*--------------------------------*/
 void * thread_func(void * args) {
 	ARGS *argumentos = (ARGS *)args;
 	int i;
-	double temp[argumentos->tamanho_matriz];
+
 	for (i=argumentos->linha_inicial; i < argumentos->tamanho_matriz; i+=argumentos->numero_threads){
-            temp[argumentos->linha_inicial] = calcula_elemento(
-												argumentos->A,
-												argumentos->x, 
-												argumentos->linha_inicial, 
-												argumentos->b[argumentos->linha_inicial],
-												argumentos->tamanho_matriz
-												);
-	// printf("thread %d calculou o elemento %d\n", argumentos->linha_inicial, i);
-	// printf("resultado: %f\n", argumentos->novo_x[argumentos->linha_inicial]);
+            argumentos->novo_x[i] = calcula_elemento(
+									argumentos->A,
+									argumentos->x, 
+									i,
+									argumentos->b[i],
+									argumentos->tamanho_matriz
+									);
 	}
-	for(i=0; i<argumentos->tamanho_matriz; i++){
-		printf("temp[%d] = %f\n", i, temp[i]);	
-	}
-	printf("---------------------\n");
-	for(i=0; i<argumentos->tamanho_matriz; i++){
-		argumentos->novo_x[i] = temp[i];
-	}
+	pthread_exit(NULL);
 }
 /*--------------------------------*/
-void jacobi(double **A, double *b, int tamanho_matriz, int numero_threads, int *iter){
+double * jacobi(double **A, double *b, int tamanho_matriz, int numero_threads, int *iter){
 
 	int i, j, l, contador = 0;
 	ARGS *argumentos = NULL;
@@ -140,36 +133,15 @@ void jacobi(double **A, double *b, int tamanho_matriz, int numero_threads, int *
 			argumentos[i].x = x;
 			argumentos[i].novo_x = novo_x;
 			pthread_create(&tid[i], NULL, thread_func, (void*)&argumentos[i]);
-			// pthread_create(&tid[i], NULL, calcula_elemento, (void*)&argumentos[i]);
 		}
 
-		double teste[tamanho_matriz];
 		for(i=0; i<numero_threads; i++){
 			pthread_join(tid[i], NULL);
-			for(j=0; j<tamanho_matriz; j++){
-				x[j] = argumentos[i].novo_x[j];
-			}
-			teste[i] = argumentos[i].novo_x[i];
 		}
 
-		// printf("---------------------\n");
-		// for(i=0; i<tamanho_matriz; i++){
-			// printf("[%d] = %f\n",i, teste[i]);
-		// }
-		// printf("----------- NOVO X ---------\n");
-		// for(i=0; i<tamanho_matriz; i++){
-			// printf("[%d] = %f\n",i, novo_x[i]);
-		// }
-		// printf("---------------------\n");
-		// printf("x= %f\n", norma_vetor(x, tamanho_matriz));
-		// printf("novo_x= %f\n", norma_vetor(novo_x, tamanho_matriz));
-
-		if(fabs(norma_vetor(x, tamanho_matriz) - norma_vetor(teste, tamanho_matriz)) < ERRO){
+		if(fabs(norma_vetor(x, tamanho_matriz) - norma_vetor(novo_x, tamanho_matriz)) < ERRO){
 			*iter = contador;
-			printf("convergiu\n");
-			exit(0);
-			// retorno->resultado = novo_x;
-			// return retorno;
+			return novo_x;
 		}
 		else {
 			for ( i = 0; i < tamanho_matriz; i++){
@@ -177,13 +149,12 @@ void jacobi(double **A, double *b, int tamanho_matriz, int numero_threads, int *
 			}
 		}
 		contador++;
-		printf("### contador: %d ###\n", contador);
+		// printf("### contador: %d ###\n", contador);
 	}
 
 }
 /*--------------------------------*/
 int main(int argc, char ** argv) {
-
 
     if(argc != 3){
         printf("Erro: Numero de argumentos invalido\n");
@@ -194,13 +165,21 @@ int main(int argc, char ** argv) {
     int numero_threads = atoi(argv[1]);
     int tamanho_matriz = atoi(argv[2]);
 	int iter = 0;
+	double * resultado = NULL;
 	
     double **A = aloca_matriz(tamanho_matriz);
 	double *b = gera_vet_b(tamanho_matriz);
     inicializa_matriz(A, tamanho_matriz);
-	escreve_matriz(A, tamanho_matriz);
+	// escreve_matriz(A, tamanho_matriz);
 
-	jacobi(A, b, tamanho_matriz, numero_threads, &iter);
+	resultado = jacobi(A, b, tamanho_matriz, numero_threads, &iter);
 
-    desaloca_matriz(A, tamanho_matriz);
+	// for (int i = 0; i < tamanho_matriz; i++){
+	// 	printf("x[%d] = %f\n", i, resultado[i]);
+	// }
+	// printf("iteracoes: %d\n", iter);
+
+   free(b);
+   free(resultado);
+   desaloca_matriz(A, tamanho_matriz);
 }
