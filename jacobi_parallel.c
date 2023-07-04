@@ -93,7 +93,7 @@ RETORNO* jacobi(double **A, double *b, int n, int np, int *iter, double *shm_id)
     int i, j, l, contador=0;
     double soma;
 
-    printf("tamanho da matriz: %d\n", n);
+    // printf("tamanho da matriz: %d\n", n);
 
     double * x = (double*)malloc(n*sizeof(double));
     for(l=0; l<n; l++){
@@ -173,10 +173,10 @@ int main(int argc, char ** argv) {
         return 0;
     }
 
-    for(i=0; i<n; i++){
-        printf("x[%d] = %f\n", i, resultado[i]);
-    }
-    printf("Iteracoes: %d\n", iter);
+    // for(i=0; i<n; i++){
+    //     printf("x[%d] = %f\n", i, resultado[i]);
+    // }
+    // printf("Iteracoes: %d\n", iter);
 
 	desaloca_matriz(A, n);
     free(b);
